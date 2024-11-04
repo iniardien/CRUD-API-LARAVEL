@@ -10,21 +10,18 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Product;
 
-
-
 class ProcessProductImage implements ShouldQueue
 {
     use Dispatchable, Queueable, SerializesModels;
 
-    protected $filePath;
+    protected $data;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($filePath)
+    public function __construct(array $data)
     {
-        $this->filePath = $filePath;
-
+        $this->data = $data;
     }
 
     /**
@@ -32,7 +29,19 @@ class ProcessProductImage implements ShouldQueue
      */
     public function handle()
     {
-         $image = Storage::get($this->filePath);
-    }
+        try {
+            // Ambil konten gambar dari storage
+            $imageContent = Storage::get("products/{$this->data['image']}");
 
+            // Simpan data produk ke database
+            Product::create([
+                'name' => $this->data['name'],
+                'description' => $this->data['description'],
+                'price' => $this->data['price'],
+                'image' => $this->data['image'], // Simpan nama file
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("Failed to process image: " . $e->getMessage());
+        }
+    }
 }

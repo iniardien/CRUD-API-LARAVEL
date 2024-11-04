@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\ProcessProductImage;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -25,17 +26,20 @@ class ProductController extends Controller
             'image' => 'nullable|image|max:2048'
         ]);
         if ($request->hasFile('image')) {
-            
-            $path = $request->file('image')->store('products');
-
-            $filename = basename($path);
-
+            $filename = $request->file('image')->getClientOriginalName(); // Dapatkan nama file
             $validated['image'] = $filename;
+    
+            // Simpan gambar di storage untuk diambil nanti
+            $request->file('image')->storeAs('products', $filename);
+            ProcessProductImage::dispatch($validated);
 
-            ProcessProductImage::dispatch($filename);
+        }else {
+            Product::create($validated);
         }
 
-        return  Product::create($validated);
+        return response()->json(['message' => 'Produk berhasil ditambahkan dan sedang diproses.'], 201);
+
+    
     }
 
     public function show(Product $product)
@@ -52,15 +56,11 @@ class ProductController extends Controller
             'image' => 'nullable|image|max:2048'
         ]);
 
-        $product->update($validated);
-
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products');
             $validated['image'] = $path;
-            ProcessProductImage::dispatch($path);
         }
-
-
+        $product->update($validated);
         return $product;
     }
 
