@@ -77,14 +77,12 @@ class ProductFailuretest extends TestCase
 
         // Data baru yang akan di-update
         $data = [
-            '_method' => 'PUT',
             'name' => 'Produk Gagal',
             'description' => 'Deskripsi Produk Gagal',
             'price' => 5000,
         ];
 
-        // Mengirim permintaan POST dengan Method PUT pada params ke endpoint update produk
-        $response = $this->postJson("/api/products/{$product->id}", $data);
+        $response = $this->putJson("/api/products/{$product->id}", $data);
 
         // Memastikan bahwa status respons adalah 403 Forbidden
         $response->assertStatus(403);

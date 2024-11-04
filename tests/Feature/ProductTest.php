@@ -98,14 +98,12 @@ class ProductTest extends TestCase
 
         // Data baru yang akan di-update
         $data = [
-            '_method' => 'PUT',
             'name' => 'Produk Baru',
             'description' => 'Deskripsi Produk Baru',
             'price' => 2000,
         ];
 
-        // Mengirim permintaan POST dengan Method PUT pada params ke endpoint update produk
-        $response = $this->postJson("/api/products/{$product->id}", $data);
+        $response = $this->putJson("/api/products/{$product->id}", $data);
 
         // Memastikan respon berhasil
         $response->assertStatus(200);

@@ -2,17 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessProductImage;
 use App\Models\Product;
-
-
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function __construct()
-    {
-
-    }
+    public function __construct() {}
 
     public function index()
     {
@@ -21,20 +17,25 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-       
+
         $validated = $request->validate([
             'name' => 'required|string',
             'description' => 'nullable|string',
             'price' => 'required|numeric',
             'image' => 'nullable|image|max:2048'
         ]);
-
         if ($request->hasFile('image')) {
+            
             $path = $request->file('image')->store('products');
-            $validated['image'] = $path;
+
+            $filename = basename($path);
+
+            $validated['image'] = $filename;
+
+            ProcessProductImage::dispatch($filename);
         }
 
-        return Product::create($validated);
+        return  Product::create($validated);
     }
 
     public function show(Product $product)
@@ -51,18 +52,21 @@ class ProductController extends Controller
             'image' => 'nullable|image|max:2048'
         ]);
 
+        $product->update($validated);
+
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products');
             $validated['image'] = $path;
+            ProcessProductImage::dispatch($path);
         }
 
-        $product->update($validated);
+
         return $product;
     }
 
     public function destroy(Product $product)
     {
-       
+
         $product->delete();
         return response()->json(['message' => 'Product deleted']);
     }
